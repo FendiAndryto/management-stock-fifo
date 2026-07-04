@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "381300940183",
+    "project_id": "manajemen-stok-cvmaju",
+    "storage_bucket": "manajemen-stok-cvmaju.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:381300940183:android:616f8f6f6410d1e7ff78d2",
+        "android_client_info": {
+          "package_name": "com.cvmajubersama.manajemenstok.mobile_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVjsVFFO1ErGyb1BoTH7zqIfHGid5HEXw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

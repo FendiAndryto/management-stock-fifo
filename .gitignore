@@ -1,0 +1,7 @@
+# Temporary files
+*.crswap
+~$*
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
