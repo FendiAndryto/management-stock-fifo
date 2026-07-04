@@ -47,7 +47,6 @@ class StockReportPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final inv = Provider.of<InventoryProvider>(context);
     final auth = Provider.of<AuthProvider>(context);
-    final bool isOwner = auth.isOwner;
 
     // Hitung total estimasi nilai jual seluruh stok di gudang
     double totalValuasiJual = 0;
@@ -59,12 +58,11 @@ class StockReportPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Laporan Stok & Valuasi'),
         actions: [
-          if (isOwner)
-            IconButton(
-              icon: const Icon(Icons.download_rounded),
-              tooltip: 'Export Laporan Stok',
-              onPressed: () => _showExportOptions(context, inv, auth.currentUser?.nama ?? 'Owner'),
-            ),
+          IconButton(
+            icon: const Icon(Icons.download_rounded),
+            tooltip: 'Export Laporan Stok',
+            onPressed: () => _showExportOptions(context, inv, auth.currentUser?.nama ?? 'Pengguna'),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -111,23 +109,21 @@ class StockReportPage extends StatelessWidget {
               ),
             ).animate().fadeIn().slideY(begin: 0.1, end: 0),
             
-            if (isOwner) ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _showExportOptions(context, inv, auth.currentUser?.nama ?? 'Owner'),
-                  icon: const Icon(Icons.download_rounded),
-                  label: const Text('Export Laporan Stok & Valuasi (PDF / Excel)'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _showExportOptions(context, inv, auth.currentUser?.nama ?? 'Pengguna'),
+                icon: const Icon(Icons.download_rounded),
+                label: const Text('Export Laporan Stok & Valuasi (PDF / Excel)'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-              ).animate().fadeIn().slideY(begin: 0.1, end: 0),
-            ],
+              ),
+            ).animate().fadeIn().slideY(begin: 0.1, end: 0),
             const SizedBox(height: 24),
 
             // 2. RINCIAN PER BARANG

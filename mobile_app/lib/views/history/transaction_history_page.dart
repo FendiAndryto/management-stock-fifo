@@ -140,19 +140,17 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   Widget build(BuildContext context) {
     final inv = Provider.of<InventoryProvider>(context);
     final auth = Provider.of<AuthProvider>(context);
-    final bool isOwner = auth.isOwner;
     final filtered = _getFilteredList(inv.transactions);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Riwayat Transaksi'),
         actions: [
-          if (isOwner)
-            IconButton(
-              icon: const Icon(Icons.download_rounded),
-              tooltip: 'Export Riwayat Transaksi',
-              onPressed: () => _showExportOptions(context, filtered, inv, auth.currentUser?.nama ?? 'Owner'),
-            ),
+          IconButton(
+            icon: const Icon(Icons.download_rounded),
+            tooltip: 'Export Riwayat Transaksi',
+            onPressed: () => _showExportOptions(context, filtered, inv, auth.currentUser?.nama ?? 'Pengguna'),
+          ),
         ],
       ),
       body: Column(

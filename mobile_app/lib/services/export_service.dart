@@ -342,7 +342,7 @@ class ExportService {
             pw.Text('Dibuat & Diekspor Oleh:', style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700)),
             pw.SizedBox(height: 4),
             pw.Text(userName, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
-            pw.Text('Role: Owner / Manajemen', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+            pw.Text('Role: Manajemen / Operasional', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
           ],
         ),
         pw.Container(
