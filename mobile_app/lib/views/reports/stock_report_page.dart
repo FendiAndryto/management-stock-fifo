@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../models/product_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/inventory_provider.dart';
 import '../../services/export_service.dart';
@@ -8,37 +9,59 @@ import '../../utils/formatters.dart';
 import '../../utils/theme.dart';
 import '../widgets/export_options_modal.dart';
 
-class StockReportPage extends StatelessWidget {
-  const StockReportPage({super.key});
+class StockReportPage extends StatefulWidget {
+  final bool initialLowStockOnly;
 
-  void _showExportOptions(BuildContext context, InventoryProvider inv, String userName) {
-    double totalValuasiJual = 0;
-    for (var p in inv.allProducts) {
-      totalValuasiJual += (p.stokTotal * p.hargaJual);
-    }
+  const StockReportPage({
+    super.key,
+    this.initialLowStockOnly = false,
+  });
 
+  @override
+  State<StockReportPage> createState() => _StockReportPageState();
+}
+
+class _StockReportPageState extends State<StockReportPage> {
+  late bool _filterLowStockOnly;
+
+  @override
+  void initState() {
+    super.initState();
+    _filterLowStockOnly = widget.initialLowStockOnly;
+  }
+
+  void _showExportOptions(
+    BuildContext context,
+    List<ProductModel> productsToExport,
+    double valuasiToExport,
+    String userName,
+  ) {
     final exportService = ExportService();
+    final String title = _filterLowStockOnly ? 'LAPORAN STOK MENIPIS & VALUASI ASET' : 'LAPORAN POSISI STOK & VALUASI ASET';
 
     ExportOptionsModal.show(
       context,
-      title: 'Export Laporan Stok',
+      title: _filterLowStockOnly ? 'Export Laporan Stok Menipis' : 'Export Laporan Stok',
       onPrintPdf: () => exportService.exportStockReportPdf(
         context: context,
-        products: inv.allProducts,
-        totalValuasiJual: totalValuasiJual,
+        products: productsToExport,
+        totalValuasiJual: valuasiToExport,
         userName: userName,
         share: false,
+        reportTitle: title,
       ),
       onSharePdf: () => exportService.exportStockReportPdf(
         context: context,
-        products: inv.allProducts,
-        totalValuasiJual: totalValuasiJual,
+        products: productsToExport,
+        totalValuasiJual: valuasiToExport,
         userName: userName,
         share: true,
+        reportTitle: title,
       ),
       onExportCsv: () => exportService.exportStockReportCsv(
-        products: inv.allProducts,
-        totalValuasiJual: totalValuasiJual,
+        products: productsToExport,
+        totalValuasiJual: valuasiToExport,
+        reportTitle: title,
       ),
     );
   }
@@ -54,6 +77,16 @@ class StockReportPage extends StatelessWidget {
       totalValuasiJual += (p.stokTotal * p.hargaJual);
     }
 
+    // Filter list barang sesuai pilihan
+    final filteredProducts = _filterLowStockOnly
+        ? inv.allProducts.where((p) => p.isLowStock).toList()
+        : inv.allProducts;
+
+    double filteredValuasiJual = 0;
+    for (var p in filteredProducts) {
+      filteredValuasiJual += (p.stokTotal * p.hargaJual);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Laporan Stok & Valuasi'),
@@ -61,7 +94,7 @@ class StockReportPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.download_rounded),
             tooltip: 'Export Laporan Stok',
-            onPressed: () => _showExportOptions(context, inv, auth.currentUser?.nama ?? 'Pengguna'),
+            onPressed: () => _showExportOptions(context, filteredProducts, filteredValuasiJual, auth.currentUser?.nama ?? 'Pengguna'),
           ),
         ],
       ),
@@ -113,7 +146,7 @@ class StockReportPage extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => _showExportOptions(context, inv, auth.currentUser?.nama ?? 'Pengguna'),
+                onPressed: () => _showExportOptions(context, filteredProducts, filteredValuasiJual, auth.currentUser?.nama ?? 'Pengguna'),
                 icon: const Icon(Icons.download_rounded),
                 label: const Text('Export Laporan Stok & Valuasi (PDF / Excel)'),
                 style: ElevatedButton.styleFrom(
@@ -124,31 +157,102 @@ class StockReportPage extends StatelessWidget {
                 ),
               ),
             ).animate().fadeIn().slideY(begin: 0.1, end: 0),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // 2. RINCIAN PER BARANG
+            // 2. FILTER STOK (SEMUA VS MENIPIS)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ChoiceChip(
+                    label: const Text('Semua Stok'),
+                    selected: !_filterLowStockOnly,
+                    onSelected: (selected) {
+                      if (selected) setState(() => _filterLowStockOnly = false);
+                    },
+                    selectedColor: AppTheme.primaryColor,
+                    labelStyle: TextStyle(
+                      color: !_filterLowStockOnly ? Colors.white : AppTheme.textPrimary,
+                      fontWeight: !_filterLowStockOnly ? FontWeight.bold : FontWeight.normal,
+                      fontSize: 13,
+                    ),
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(color: !_filterLowStockOnly ? Colors.transparent : Colors.grey.shade300),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ChoiceChip(
+                    avatar: Icon(
+                      Icons.warning_amber_rounded,
+                      size: 16,
+                      color: _filterLowStockOnly ? Colors.white : AppTheme.errorColor,
+                    ),
+                    label: const Text('Stok Menipis'),
+                    selected: _filterLowStockOnly,
+                    onSelected: (selected) {
+                      if (selected) setState(() => _filterLowStockOnly = true);
+                    },
+                    selectedColor: AppTheme.errorColor,
+                    labelStyle: TextStyle(
+                      color: _filterLowStockOnly ? Colors.white : AppTheme.textPrimary,
+                      fontWeight: _filterLowStockOnly ? FontWeight.bold : FontWeight.normal,
+                      fontSize: 13,
+                    ),
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(color: _filterLowStockOnly ? Colors.transparent : Colors.grey.shade300),
+                    ),
+                  ),
+                ],
+              ),
+            ).animate().fadeIn().slideX(begin: -0.1, end: 0),
+            const SizedBox(height: 16),
+
+            // 3. RINCIAN PER BARANG
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Rincian Stok Per Barang', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
-                Text('${inv.allProducts.length} Item', style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
+                Text(
+                  _filterLowStockOnly ? 'Stok yang Menipis' : 'Rincian Stok Per Barang',
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                ),
+                Text('${filteredProducts.length} Item', style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w600)),
               ],
             ),
             const SizedBox(height: 12),
-            if (inv.allProducts.isEmpty)
+            if (filteredProducts.isEmpty)
               Container(
                 padding: const EdgeInsets.all(32),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                child: const Text('Belum ada data barang di laporan.', style: TextStyle(color: AppTheme.textSecondary)),
+                child: Column(
+                  children: [
+                    Icon(
+                      _filterLowStockOnly ? Icons.check_circle_outline_rounded : Icons.inventory_2_outlined,
+                      size: 48,
+                      color: _filterLowStockOnly ? AppTheme.successColor : AppTheme.textSecondary,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _filterLowStockOnly
+                          ? 'Tidak ada stok barang yang menipis (Semua stok aman).'
+                          : 'Belum ada data barang di laporan.',
+                      style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               )
             else
               ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: inv.allProducts.length,
+                itemCount: filteredProducts.length,
                 itemBuilder: (context, index) {
-                  final p = inv.allProducts[index];
+                  final p = filteredProducts[index];
                   final subtotalJual = p.stokTotal * p.hargaJual;
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),

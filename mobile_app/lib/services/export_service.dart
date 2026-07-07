@@ -19,6 +19,7 @@ class ExportService {
     required double totalValuasiJual,
     required String userName,
     bool share = false,
+    String? reportTitle,
   }) async {
     final logoImage = await _loadLogoImage();
     final doc = pw.Document();
@@ -33,7 +34,7 @@ class ExportService {
         build: (pw.Context ctx) {
           return [
             // Header Kop Surat
-            _buildPdfHeader('LAPORAN POSISI STOK & VALUASI ASET', logoImage: logoImage),
+            _buildPdfHeader(reportTitle ?? 'LAPORAN POSISI STOK & VALUASI ASET', logoImage: logoImage),
             pw.SizedBox(height: 16),
             
             // Ringkasan Eksekutif Box
@@ -97,11 +98,12 @@ class ExportService {
       ),
     );
 
-    final String filename = 'Laporan_Stok_${DateTime.now().millisecondsSinceEpoch}.pdf';
+    final String prefix = (reportTitle != null && reportTitle.contains('MENIPIS')) ? 'Laporan_Stok_Menipis_' : 'Laporan_Stok_';
+    final String filename = '$prefix${DateTime.now().millisecondsSinceEpoch}.pdf';
     if (share) {
       await Printing.sharePdf(bytes: await doc.save(), filename: filename);
     } else {
-      await Printing.layoutPdf(onLayout: (format) async => await doc.save(), name: 'Laporan_Stok');
+      await Printing.layoutPdf(onLayout: (format) async => await doc.save(), name: (reportTitle != null && reportTitle.contains('MENIPIS')) ? 'Laporan_Stok_Menipis' : 'Laporan_Stok');
     }
   }
 
@@ -111,8 +113,13 @@ class ExportService {
   Future<void> exportStockReportCsv({
     required List<ProductModel> products,
     required double totalValuasiJual,
+    String? reportTitle,
   }) async {
     final StringBuffer csv = StringBuffer();
+    if (reportTitle != null) {
+      csv.writeln('"$reportTitle"');
+      csv.writeln('');
+    }
     csv.writeln('No,Kategori,Nama Barang,Stok Total,Satuan,Stok Minimum,Status Stok,Valuasi Aset Stok');
 
     for (int i = 0; i < products.length; i++) {
@@ -130,8 +137,9 @@ class ExportService {
     csv.writeln('');
     csv.writeln(',,,,,,,TOTAL VALUASI ASET:,$totalValuasiJual');
 
+    final String prefix = (reportTitle != null && reportTitle.contains('MENIPIS')) ? 'Laporan_Stok_Menipis_' : 'Laporan_Stok_';
     final Uint8List bytes = Uint8List.fromList(utf8.encode(csv.toString()));
-    await Printing.sharePdf(bytes: bytes, filename: 'Laporan_Stok_${DateTime.now().millisecondsSinceEpoch}.csv');
+    await Printing.sharePdf(bytes: bytes, filename: '$prefix${DateTime.now().millisecondsSinceEpoch}.csv');
   }
 
   // ---------------------------------------------------------------------------

@@ -126,6 +126,23 @@ class DashboardPage extends StatelessWidget {
                               ),
                             ),
                           ),
+                          TextButton.icon(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const StockReportPage(initialLowStockOnly: true),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.arrow_forward_rounded, size: 16, color: AppTheme.errorColor),
+                            label: const Text('Lihat Semua', style: TextStyle(color: AppTheme.errorColor, fontSize: 12, fontWeight: FontWeight.bold)),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
